@@ -1,150 +1,318 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Beer Freezer Timer</title>
-<style>
-  body {
-    margin: 0;
-    padding: 0;
-    background: blue;
-    color: white;
-    font-family: Arial, sans-serif;
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-start;
-    align-items: center;
-    height: 100vh;
-    overflow: hidden;
-  }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Egg Timer</title>
+    <!-- Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Configure Tailwind to use Inter font and our custom colors -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        'yolk-cream': '#FEF3C7',
+                        'robin-blue': '#93C5FD',
+                        'hen-red': '#EF4444',
+                        'medium-lime': '#A3E635', /* New color for Medium Boil */
+                        'charcoal': '#1F2937',
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Custom styling to handle the 9:16 layout focus -->
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            min-height: 100vh;
+        }
+        /* Custom class to simulate a focused, tall phone screen on desktop */
+        .ratio-focus {
+            max-width: 400px; /* Approximately 9 units wide */
+            height: 80vh; /* Approximately 16 units tall */
+            min-height: 600px;
+            max-height: 900px;
+        }
 
-  .screen {
-    width: 100%;
-    max-width: 450px;
-    height: 100vh;
-    padding: 20px;
-    box-sizing: border-box;
-  }
-
-  h1 {
-    text-align: center;
-    margin-top: 10px;
-  }
-
-  #timer {
-    font-size: 80px;
-    text-align: center;
-    margin: 40px 0;
-  }
-
-  .btns {
-    display: flex;
-    justify-content: center;
-    gap: 15px;
-    margin-bottom: 20px;
-  }
-
-  button {
-    padding: 12px 22px;
-    font-size: 18px;
-    border: none;
-    cursor: pointer;
-    border-radius: 6px;
-  }
-
-  .start-btn {
-    background: #00c200;
-    color: white;
-  }
-
-  .reset-btn {
-    background: #e00000;
-    color: white;
-  }
-
-  .instructions {
-    font-size: 15px;
-    line-height: 1.45;
-    margin-top: 10px;
-    max-height: 52vh;
-    overflow-y: auto;
-  }
-</style>
+        /* Responsive adjustments for mobile */
+        @media (max-width: 640px) {
+            .ratio-focus {
+                width: 100%;
+                height: 100vh;
+                max-width: none;
+                max-height: none;
+            }
+        }
+    </style>
 </head>
-<body>
-<div class="screen">
-  <h1>Beer Freezer Timer 🍺❄️</h1>
-  <div id="timer">20:00</div>
+<body class="bg-gray-100 flex items-center justify-center p-4">
 
-  <div class="btns">
-    <button class="start-btn" onclick="startTimer()">Start</button>
-    <button class="reset-btn" onclick="resetTimer()">Reset</button>
-  </div>
+    <!-- Main Application Container (Simulating 9:16 ratio focus) -->
+    <div id="app-container" class="ratio-focus w-full bg-yolk-cream rounded-3xl shadow-2xl p-6 flex flex-col items-center justify-between transition-all duration-300">
+        
+        <!-- Header & Status -->
+        <header class="w-full text-center mb-6 pt-4">
+            <h1 class="text-4xl font-extrabold text-charcoal">Egg Timer</h1>
+            <p id="status-message" class="text-xl mt-2 text-charcoal/75 transition-opacity duration-500">Ready to start</p>
+        </header>
 
-  <div class="instructions">
-    <h3>Step-by-Step Instructions for Freezing a Beer Bottle in the Freezer 🍺❄️</h3>
-    <p><b>Step 1: The Mission</b><br>
-    Open your freezer like you're entering a top-secret vault. Whisper: “Operation Ice-Cold Brew begins now.”</p>
+        <!-- Timer Display -->
+        <div class="flex-grow flex items-center justify-center w-full">
+            <div class="text-charcoal text-center">
+                <div id="countdown-display" class="text-8xl font-mono font-bold tracking-tighter">00:00</div>
+            </div>
+        </div>
 
-    <p><b>Step 2: Clear Space</b><br>
-    Move aside the frozen pizza, mystery Tupperware, and that bag of peas you never use. Your beer deserves VIP space.</p>
+        <!-- Buttons -->
+        <div class="w-full flex flex-col space-y-4 pb-4">
+            
+            <!-- Stop/Reset Button Row -->
+            <button id="stop-btn" class="w-full px-4 py-3 rounded-xl shadow-lg bg-gray-300 text-charcoal font-bold text-lg hover:bg-gray-400 active:ring-4 active:ring-gray-300 transition-all duration-150 transform hover:scale-[1.01]">
+                STOP / RESET
+            </button>
 
-    <p><b>Step 3: Place the Beer</b><br>
-    Gently lay your beer in the freezer like it's a newborn. Do NOT toss it.</p>
+            <!-- Preset Buttons Row (Soft, Medium, Hard) -->
+            <div class="flex justify-between space-x-2">
+                
+                <!-- Soft Boil Button (6 Minutes) -->
+                <button id="soft-boil-btn" class="flex-1 px-2 py-3 rounded-xl shadow-lg bg-robin-blue text-charcoal font-bold text-lg hover:bg-blue-400 active:ring-4 active:ring-blue-300 transition-all duration-150 transform hover:scale-[1.02]">
+                    SOFT <br><span class="text-xs sm:text-sm font-medium">(6 Minutes)</span>
+                </button>
+                
+                <!-- Medium Boil Button (7:30 Minutes) -->
+                <button id="medium-boil-btn" class="flex-1 px-2 py-3 rounded-xl shadow-lg bg-medium-lime text-charcoal font-bold text-lg hover:bg-lime-500 active:ring-4 active:ring-lime-300 transition-all duration-150 transform hover:scale-[1.02]">
+                    MEDIUM <br><span class="text-xs sm:text-sm font-medium">(7.5 Minutes)</span>
+                </button>
+            
+                <!-- Hard Boil Button (9 Minutes) -->
+                <button id="hard-boil-btn" class="flex-1 px-2 py-3 rounded-xl shadow-lg bg-hen-red text-white font-bold text-lg hover:bg-red-600 active:ring-4 active:ring-red-300 transition-all duration-150 transform hover:scale-[1.02]">
+                    HARD <br><span class="text-xs sm:text-sm font-medium">(9 Minutes)</span>
+                </button>
+            </div>
+        </div>
 
-    <p><b>Step 4: Set the Timer</b><br>
-    Press Start. Because if you don’t, you WILL forget and cause a beer slush explosion.</p>
+        <!-- Footer added here -->
+        <footer class="text-center text-sm text-charcoal/50 mt-4">
+            Tapfone &copy; 2025
+        </footer>
+    </div>
 
-    <p><b>Step 5: Walk Away</b><br>
-    Say: “I am responsible.” (You’re not. But try.)</p>
+    <!-- Message Box Modal (Replaces alert()) -->
+    <div id="message-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center p-4 z-50 transition-opacity duration-300">
+        <div class="bg-white rounded-2xl shadow-2xl p-6 max-w-sm w-full text-center">
+            <p id="modal-text" class="text-2xl font-bold text-charcoal mb-4"></p>
+            <button onclick="hideModal()" class="w-full py-3 bg-hen-red text-white font-bold rounded-xl hover:bg-red-600 transition-colors">
+                Got It!
+            </button>
+        </div>
+    </div>
 
-    <p><b>Step 6: Fight the Urge</b><br>
-    Do NOT check the beer. This isn't a soufflé.</p>
+    <script>
+        // DOM Elements
+        const countdownDisplay = document.getElementById('countdown-display');
+        const statusMessage = document.getElementById('status-message');
+        const softBoilBtn = document.getElementById('soft-boil-btn');
+        const mediumBoilBtn = document.getElementById('medium-boil-btn'); // New Element
+        const hardBoilBtn = document.getElementById('hard-boil-btn');
+        const stopBtn = document.getElementById('stop-btn'); // New Element
+        const appContainer = document.getElementById('app-container');
+        const messageModal = document.getElementById('message-modal');
+        const modalText = document.getElementById('modal-text');
 
-    <p><b>Step 7: Retrieve on Time</b><br>
-    When the timer ends, sprint like it's the Olympics and save that beer.</p>
+        // Audio Variables
+        let audioContext = null;
+        let isAudioInitialized = false;
 
-    <p><b>Step 8: Celebrate</b><br>
-    Crack open your masterpiece. Achieve Peak Refreshment.</p>
-  </div>
-</div>
+        // Timer Variables
+        let timerInterval = null;
+        let secondsRemaining = 0;
+        const SOFT_BOIL_DURATION = 6 * 60;        // 6 minutes
+        const MEDIUM_BOIL_DURATION = 7.5 * 60;    // 7 minutes 30 seconds (450 seconds)
+        const HARD_BOIL_DURATION = 9 * 60;        // 9 minutes
 
-<audio id="chime-sound">
-  <source src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg" type="audio/ogg" />
-</audio>
+        // --- Audio Functions ---
 
-<script>
-  let time = 1200;
-  let countdown;
+        /**
+         * Initializes the AudioContext on first user interaction.
+         */
+        function initAudio() {
+            if (!isAudioInitialized) {
+                // Check for browser compatibility
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                isAudioInitialized = true;
+            }
+        }
 
-  function updateDisplay() {
-    let minutes = Math.floor(time / 60);
-    let seconds = time % 60;
-    document.getElementById("timer").textContent =
-      `${minutes}:${seconds < 10 ? "0" : ""}${seconds}`;
-  }
+        /**
+         * Plays a short, high-pitched chime sound.
+         */
+        function playChime() {
+            initAudio(); // Ensure context is running
 
-  function startTimer() {
-    if (countdown) return;
-    countdown = setInterval(() => {
-      time--;
-      updateDisplay();
-      if (time <= 0) {
-        clearInterval(countdown);
-        countdown = null;
-        document.getElementById("chime-sound").play();
-      }
-    }, 1000);
-  }
+            if (!audioContext) return;
 
-  function resetTimer() {
-    clearInterval(countdown);
-    countdown = null;
-    time = 1200;
-    updateDisplay();
-  }
-</script>
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            const now = audioContext.currentTime;
+            const duration = 0.5; // seconds
+
+            // Connect oscillator -> gain -> destination
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+
+            // Set tone properties (A clean sine wave at 880 Hz)
+            oscillator.type = 'sine';
+            oscillator.frequency.setValueAtTime(880, now);
+
+            // Set volume and fade out (to avoid clicks)
+            gainNode.gain.setValueAtTime(0, now); // Start at 0 volume
+            gainNode.gain.linearRampToValueAtTime(0.5, now + 0.01); // Quick ramp up
+            gainNode.gain.linearRampToValueAtTime(0.0001, now + duration); // Fade out
+
+            // Start and stop the oscillator
+            oscillator.start(now);
+            oscillator.stop(now + duration);
+        }
+
+        // --- Utility Functions ---
+
+        /**
+         * Formats seconds into MM:SS string.
+         * @param {number} totalSeconds - The total number of seconds.
+         * @returns {string} - The formatted time string.
+         */
+        function formatTime(totalSeconds) {
+            // Ensure we don't display negative time
+            const safeSeconds = Math.max(0, totalSeconds); 
+            const minutes = Math.floor(safeSeconds / 60);
+            const seconds = safeSeconds % 60;
+            const format = (num) => String(num).padStart(2, '0');
+            return `${format(minutes)}:${format(seconds)}`;
+        }
+
+        /**
+         * Shows the custom modal/message box.
+         * @param {string} message - The message to display.
+         */
+        function showModal(message) {
+            modalText.textContent = message;
+            messageModal.style.display = 'flex';
+        }
+
+        /**
+         * Hides the custom modal/message box.
+         */
+        function hideModal() {
+            messageModal.style.display = 'none';
+        }
+
+        /**
+         * Renders the current state of the timer.
+         */
+        function render() {
+            countdownDisplay.textContent = formatTime(secondsRemaining);
+        }
+
+        // --- Timer Logic ---
+        
+        /**
+         * Stops the timer and resets the display/status.
+         */
+        function stopTimer() {
+            if (timerInterval) {
+                clearInterval(timerInterval);
+                timerInterval = null;
+            }
+            secondsRemaining = 0;
+            statusMessage.textContent = "Timer stopped.";
+            render();
+        }
+
+
+        /**
+         * Main countdown function, called every second.
+         */
+        function tick() {
+            if (secondsRemaining <= 0) {
+                // Timer finished!
+                clearInterval(timerInterval);
+                timerInterval = null;
+                
+                // NEW: Play the chime sound
+                playChime();
+
+                // Vibrate the device if supported (for mobile feedback)
+                if (window.navigator && window.navigator.vibrate) {
+                    window.navigator.vibrate(1000); // Vibrate for 1 second
+                }
+
+                // Visual feedback: briefly flash the background green
+                appContainer.classList.remove('bg-yolk-cream');
+                appContainer.classList.add('bg-green-300');
+                setTimeout(() => {
+                    appContainer.classList.remove('bg-green-300');
+                    appContainer.classList.add('bg-yolk-cream');
+                }, 1000);
+
+                statusMessage.textContent = "Done! Your egg is ready!";
+                showModal("Time's up! Your egg is perfectly cooked!");
+
+            } else {
+                secondsRemaining--;
+                render();
+            }
+        }
+
+        /**
+         * Starts a new timer.
+         * @param {number} duration - The duration in seconds.
+         * @param {string} type - The type of boil (Soft, Medium, or Hard).
+         */
+        function startTimer(duration, type) {
+            if (timerInterval) {
+                // If a timer is already running, clear it first
+                clearInterval(timerInterval);
+            }
+            
+            secondsRemaining = duration;
+            statusMessage.textContent = `Timing for ${type} Boil...`;
+            render();
+
+            // Start the interval
+            timerInterval = setInterval(tick, 1000);
+        }
+
+        // --- Event Listeners ---
+
+        softBoilBtn.addEventListener('click', () => {
+            initAudio();
+            startTimer(SOFT_BOIL_DURATION, 'Soft');
+        });
+
+        mediumBoilBtn.addEventListener('click', () => {
+            initAudio();
+            startTimer(MEDIUM_BOIL_DURATION, 'Medium');
+        });
+
+        hardBoilBtn.addEventListener('click', () => {
+            initAudio();
+            startTimer(HARD_BOIL_DURATION, 'Hard');
+        });
+        
+        stopBtn.addEventListener('click', () => {
+            initAudio();
+            stopTimer();
+        });
+
+
+        // Initialize display
+        render();
+
+    </script>
 </body>
 </html>
-

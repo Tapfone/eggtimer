@@ -1,318 +1,200 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Egg Timer</title>
-    <!-- Load Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Configure Tailwind to use Inter font and our custom colors -->
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    fontFamily: {
-                        sans: ['Inter', 'sans-serif'],
-                    },
-                    colors: {
-                        'yolk-cream': '#FEF3C7',
-                        'robin-blue': '#93C5FD',
-                        'hen-red': '#EF4444',
-                        'medium-lime': '#A3E635', /* New color for Medium Boil */
-                        'charcoal': '#1F2937',
-                    }
-                }
-            }
-        }
-    </script>
-    <!-- Custom styling to handle the 9:16 layout focus -->
-    <style>
-        body {
-            font-family: 'Inter', sans-serif;
-            min-height: 100vh;
-        }
-        /* Custom class to simulate a focused, tall phone screen on desktop */
-        .ratio-focus {
-            max-width: 400px; /* Approximately 9 units wide */
-            height: 80vh; /* Approximately 16 units tall */
-            min-height: 600px;
-            max-height: 900px;
-        }
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Egg Timer — Tapfone</title>
+  <style>
+    /* Root layout: center a 9:16 app frame */
+    :root{--bg:#f3f3f5;--egg:#ffffff;--yolk:#ffd24d;--accent:#ffb84d;--glass: rgba(255,255,255,0.6)}
+    html,body{height:100%;margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,'Helvetica Neue',Arial}
+    body{display:flex;align-items:center;justify-content:center;background:#4da6ff;}
 
-        /* Responsive adjustments for mobile */
-        @media (max-width: 640px) {
-            .ratio-focus {
-                width: 100%;
-                height: 100vh;
-                max-width: none;
-                max-height: none;
-            }
-        }
-    </style>
+    /* App frame with 9:16 aspect ratio */
+    .frame{
+      width:min(420px,46vh); /* responsive: scale with viewport height */
+      aspect-ratio:9/16; /* enforces 9:16 ratio */
+      display:flex;flex-direction:column;align-items:center;justify-content:space-between;
+      padding:18px;box-sizing:border-box;position:relative;
+    }
+
+    /* Egg background (oval) */
+    .egg{
+      width:100%;height:100%;background:var(--egg);border-radius:60% 60% 55% 55% / 68% 68% 32% 32%;
+      box-shadow: 0 18px 40px rgba(10,20,40,0.08), inset -6px -10px 20px rgba(0,0,0,0.03);
+      position:relative;display:flex;flex-direction:column;align-items:center;padding:20px;gap:8px;
+    }
+
+    /* Title top center */
+    .title{font-weight:700;font-size:20px;letter-spacing:0.6px;text-align:center;margin-top:6px}
+
+    /* Yolk area */
+    .yolk-wrap{flex:1;display:flex;align-items:center;justify-content:center;width:100%;}
+    .yolk{
+      width:64%;aspect-ratio:1/1;border-radius:50%;background:radial-gradient(circle at 30% 28%, #ffe27a 0%, var(--yolk) 45%, #ffb84d 100%);
+      display:flex;align-items:center;justify-content:center;position:relative;box-shadow: 0 10px 20px rgba(255,180,60,0.18), inset 0 -6px 10px rgba(255,255,255,0.25);
+    }
+
+    /* Circular progress SVG sits around the yolk */
+    .progress-svg{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:110%;height:110%;pointer-events:none}
+
+    .time-display{position:absolute;font-weight:700;font-size:28px;color:#222;text-shadow:0 1px 0 rgba(255,255,255,0.6)}
+
+    /* Controls area */
+    .controls{width:100%;display:flex;flex-direction:column;gap:12px;padding:8px 6px 16px;box-sizing:border-box}
+    .preset-row{display:flex;gap:10px;justify-content:center}
+    button.preset{flex:1;padding:12px 8px;border-radius:12px;border:none;font-weight:700;cursor:pointer;box-shadow:0 6px 14px rgba(0,0,0,0.06)}
+    .soft{background:linear-gradient(180deg,#e6f6ff,#d9f0ff);color:#065a86}
+    .medium{background:linear-gradient(180deg,#fff6e6,#fff0d9);color:#7a4a00}
+    .hard{background:linear-gradient(180deg,#ffece6,#ffdcd0);color:#7a2b00}
+
+    .utility-row{display:flex;gap:12px;justify-content:center}
+    button.ghost{background:transparent;border:2px solid rgba(0,0,0,0.06);padding:10px 14px;border-radius:10px;font-weight:700;cursor:pointer}
+
+    /* Footer */
+    .footer{font-weight:600;font-size:13px;padding-bottom:6px;color:#667085;text-align:center}
+
+    /* Responsive tweaks */
+    @media (max-width:420px){.frame{width:92vw}}
+  </style>
 </head>
-<body class="bg-gray-100 flex items-center justify-center p-4">
+<body>
+  <div class="frame" role="application" aria-label="Egg timer">
+    <div class="egg">
+      <div class="title" id="appTitle">Egg Timer</div>
 
-    <!-- Main Application Container (Simulating 9:16 ratio focus) -->
-    <div id="app-container" class="ratio-focus w-full bg-yolk-cream rounded-3xl shadow-2xl p-6 flex flex-col items-center justify-between transition-all duration-300">
-        
-        <!-- Header & Status -->
-        <header class="w-full text-center mb-6 pt-4">
-            <h1 class="text-4xl font-extrabold text-charcoal">Egg Timer</h1>
-            <p id="status-message" class="text-xl mt-2 text-charcoal/75 transition-opacity duration-500">Ready to start</p>
-        </header>
+      <div class="yolk-wrap">
+        <div class="yolk" aria-hidden="true">
+          <!-- progress ring (SVG) -->
+          <svg class="progress-svg" viewBox="0 0 120 120" preserveAspectRatio="xMidYMid meet">
+            <defs></defs>
+            <g transform="translate(60 60)">
+              <circle r="52" fill="transparent" stroke="rgba(0,0,0,0.04)" stroke-width="12"></circle>
+              <circle id="progress" r="52" fill="transparent" stroke="rgba(0,0,0,0.12)" stroke-width="12" stroke-linecap="round"
+                      stroke-dasharray="326.725" stroke-dashoffset="0" transform="rotate(-90)"></circle>
+            </g>
+          </svg>
 
-        <!-- Timer Display -->
-        <div class="flex-grow flex items-center justify-center w-full">
-            <div class="text-charcoal text-center">
-                <div id="countdown-display" class="text-8xl font-mono font-bold tracking-tighter">00:00</div>
-            </div>
+          <div class="time-display" id="timeDisplay">00:00</div>
+        </div>
+      </div>
+
+      <div class="controls">
+        <div class="preset-row">
+          <button class="preset soft" data-seconds="240">Soft<br><small>4:00</small></button>
+          <button class="preset medium" data-seconds="420">Medium<br><small>7:00</small></button>
+          <button class="preset hard" data-seconds="600">Hard<br><small>10:00</small></button>
         </div>
 
-        <!-- Buttons -->
-        <div class="w-full flex flex-col space-y-4 pb-4">
-            
-            <!-- Stop/Reset Button Row -->
-            <button id="stop-btn" class="w-full px-4 py-3 rounded-xl shadow-lg bg-gray-300 text-charcoal font-bold text-lg hover:bg-gray-400 active:ring-4 active:ring-gray-300 transition-all duration-150 transform hover:scale-[1.01]">
-                STOP / RESET
-            </button>
-
-            <!-- Preset Buttons Row (Soft, Medium, Hard) -->
-            <div class="flex justify-between space-x-2">
-                
-                <!-- Soft Boil Button (6 Minutes) -->
-                <button id="soft-boil-btn" class="flex-1 px-2 py-3 rounded-xl shadow-lg bg-robin-blue text-charcoal font-bold text-lg hover:bg-blue-400 active:ring-4 active:ring-blue-300 transition-all duration-150 transform hover:scale-[1.02]">
-                    SOFT <br><span class="text-xs sm:text-sm font-medium">(6 Minutes)</span>
-                </button>
-                
-                <!-- Medium Boil Button (7:30 Minutes) -->
-                <button id="medium-boil-btn" class="flex-1 px-2 py-3 rounded-xl shadow-lg bg-medium-lime text-charcoal font-bold text-lg hover:bg-lime-500 active:ring-4 active:ring-lime-300 transition-all duration-150 transform hover:scale-[1.02]">
-                    MEDIUM <br><span class="text-xs sm:text-sm font-medium">(7.5 Minutes)</span>
-                </button>
-            
-                <!-- Hard Boil Button (9 Minutes) -->
-                <button id="hard-boil-btn" class="flex-1 px-2 py-3 rounded-xl shadow-lg bg-hen-red text-white font-bold text-lg hover:bg-red-600 active:ring-4 active:ring-red-300 transition-all duration-150 transform hover:scale-[1.02]">
-                    HARD <br><span class="text-xs sm:text-sm font-medium">(9 Minutes)</span>
-                </button>
-            </div>
+        <div class="utility-row">
+          <button class="ghost" id="startPause">Start</button>
+          <button class="ghost" id="resetBtn">Reset</button>
         </div>
+      </div>
 
-        <!-- Footer added here -->
-        <footer class="text-center text-sm text-charcoal/50 mt-4">
-            Tapfone &copy; 2025
-        </footer>
+      <div class="footer">Tapfone</div>
     </div>
+  </div>
 
-    <!-- Message Box Modal (Replaces alert()) -->
-    <div id="message-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center p-4 z-50 transition-opacity duration-300">
-        <div class="bg-white rounded-2xl shadow-2xl p-6 max-w-sm w-full text-center">
-            <p id="modal-text" class="text-2xl font-bold text-charcoal mb-4"></p>
-            <button onclick="hideModal()" class="w-full py-3 bg-hen-red text-white font-bold rounded-xl hover:bg-red-600 transition-colors">
-                Got It!
-            </button>
-        </div>
-    </div>
+  <script>
+    // Element refs
+    const presets = document.querySelectorAll('.preset');
+    const startPause = document.getElementById('startPause');
+    const resetBtn = document.getElementById('resetBtn');
+    const timeDisplay = document.getElementById('timeDisplay');
+    const progress = document.getElementById('progress');
 
-    <script>
-        // DOM Elements
-        const countdownDisplay = document.getElementById('countdown-display');
-        const statusMessage = document.getElementById('status-message');
-        const softBoilBtn = document.getElementById('soft-boil-btn');
-        const mediumBoilBtn = document.getElementById('medium-boil-btn'); // New Element
-        const hardBoilBtn = document.getElementById('hard-boil-btn');
-        const stopBtn = document.getElementById('stop-btn'); // New Element
-        const appContainer = document.getElementById('app-container');
-        const messageModal = document.getElementById('message-modal');
-        const modalText = document.getElementById('modal-text');
+    // Timer state
+    let totalSeconds = 0;
+    let remaining = 0;
+    let timerId = null;
+    const circumference = 2 * Math.PI * 52; // matches r=52 used in SVG
+    progress.style.strokeDasharray = circumference.toFixed(3);
 
-        // Audio Variables
-        let audioContext = null;
-        let isAudioInitialized = false;
+    function formatTime(s){
+      const mm = Math.floor(s/60).toString().padStart(2,'0');
+      const ss = Math.floor(s%60).toString().padStart(2,'0');
+      return `${mm}:${ss}`;
+    }
 
-        // Timer Variables
-        let timerInterval = null;
-        let secondsRemaining = 0;
-        const SOFT_BOIL_DURATION = 6 * 60;        // 6 minutes
-        const MEDIUM_BOIL_DURATION = 7.5 * 60;    // 7 minutes 30 seconds (450 seconds)
-        const HARD_BOIL_DURATION = 9 * 60;        // 9 minutes
+    function updateDisplay(){
+      timeDisplay.textContent = formatTime(remaining);
+      // update progress offset
+      const pct = totalSeconds > 0 ? (remaining / totalSeconds) : 0;
+      const dash = (1 - pct) * circumference;
+      progress.style.strokeDashoffset = dash.toFixed(3);
+    }
 
-        // --- Audio Functions ---
-
-        /**
-         * Initializes the AudioContext on first user interaction.
-         */
-        function initAudio() {
-            if (!isAudioInitialized) {
-                // Check for browser compatibility
-                audioContext = new (window.AudioContext || window.webkitAudioContext)();
-                isAudioInitialized = true;
-            }
+    function startTimer(){
+      if (remaining <= 0) return;
+      if (timerId) return; // already running
+      startPause.textContent = 'Pause';
+      timerId = setInterval(()=>{
+        remaining--;
+        if (remaining <= 0){
+          remaining = 0;updateDisplay();stopTimer(true);return;
         }
+        updateDisplay();
+      },1000);
+    }
 
-        /**
-         * Plays a short, high-pitched chime sound.
-         */
-        function playChime() {
-            initAudio(); // Ensure context is running
+    function stopTimer(finished=false){
+      if (timerId){clearInterval(timerId);timerId = null}
+      startPause.textContent = finished? 'Done' : 'Start';
+      if (finished){
+        // small visual flash on completion
+        const yolk = document.querySelector('.yolk');
+        yolk.animate([{transform:'scale(1)'},{transform:'scale(1.06)'},{transform:'scale(1)'}],{duration:700});
+        // play a beep using WebAudio
+        try{
+          const ctx = new (window.AudioContext||window.webkitAudioContext)();
+          const o = ctx.createOscillator(); const g = ctx.createGain();
+          o.type='sine'; o.frequency.value=880; g.gain.value=0.0001;
+          o.connect(g); g.connect(ctx.destination);
+          o.start(); g.gain.exponentialRampToValueAtTime(0.04, ctx.currentTime+0.02);
+          g.gain.exponentialRampToValueAtTime(0.00001, ctx.currentTime+0.6);
+          o.stop(ctx.currentTime+0.62);
+        }catch(e){/* ignore if audio blocked */}
+      }
+    }
 
-            if (!audioContext) return;
+    // Preset buttons
+    presets.forEach(btn=>{
+      btn.addEventListener('click',()=>{
+        totalSeconds = Number(btn.dataset.seconds);
+        remaining = totalSeconds;
+        updateDisplay();
+        stopTimer();
+        // auto-start
+        startTimer();
+      });
+    });
 
-            const oscillator = audioContext.createOscillator();
-            const gainNode = audioContext.createGain();
-            const now = audioContext.currentTime;
-            const duration = 0.5; // seconds
+    // Start/Pause handler
+    startPause.addEventListener('click',()=>{
+      if (!timerId){
+        startTimer();
+      } else {
+        // pause
+        clearInterval(timerId); timerId = null; startPause.textContent='Start';
+      }
+    });
 
-            // Connect oscillator -> gain -> destination
-            oscillator.connect(gainNode);
-            gainNode.connect(audioContext.destination);
+    // Reset
+    resetBtn.addEventListener('click',()=>{
+      clearInterval(timerId); timerId = null; totalSeconds = 0; remaining = 0; updateDisplay(); startPause.textContent='Start';
+    });
 
-            // Set tone properties (A clean sine wave at 880 Hz)
-            oscillator.type = 'sine';
-            oscillator.frequency.setValueAtTime(880, now);
+    // init display
+    totalSeconds = 0; remaining = 0; updateDisplay();
 
-            // Set volume and fade out (to avoid clicks)
-            gainNode.gain.setValueAtTime(0, now); // Start at 0 volume
-            gainNode.gain.linearRampToValueAtTime(0.5, now + 0.01); // Quick ramp up
-            gainNode.gain.linearRampToValueAtTime(0.0001, now + duration); // Fade out
-
-            // Start and stop the oscillator
-            oscillator.start(now);
-            oscillator.stop(now + duration);
-        }
-
-        // --- Utility Functions ---
-
-        /**
-         * Formats seconds into MM:SS string.
-         * @param {number} totalSeconds - The total number of seconds.
-         * @returns {string} - The formatted time string.
-         */
-        function formatTime(totalSeconds) {
-            // Ensure we don't display negative time
-            const safeSeconds = Math.max(0, totalSeconds); 
-            const minutes = Math.floor(safeSeconds / 60);
-            const seconds = safeSeconds % 60;
-            const format = (num) => String(num).padStart(2, '0');
-            return `${format(minutes)}:${format(seconds)}`;
-        }
-
-        /**
-         * Shows the custom modal/message box.
-         * @param {string} message - The message to display.
-         */
-        function showModal(message) {
-            modalText.textContent = message;
-            messageModal.style.display = 'flex';
-        }
-
-        /**
-         * Hides the custom modal/message box.
-         */
-        function hideModal() {
-            messageModal.style.display = 'none';
-        }
-
-        /**
-         * Renders the current state of the timer.
-         */
-        function render() {
-            countdownDisplay.textContent = formatTime(secondsRemaining);
-        }
-
-        // --- Timer Logic ---
-        
-        /**
-         * Stops the timer and resets the display/status.
-         */
-        function stopTimer() {
-            if (timerInterval) {
-                clearInterval(timerInterval);
-                timerInterval = null;
-            }
-            secondsRemaining = 0;
-            statusMessage.textContent = "Timer stopped.";
-            render();
-        }
-
-
-        /**
-         * Main countdown function, called every second.
-         */
-        function tick() {
-            if (secondsRemaining <= 0) {
-                // Timer finished!
-                clearInterval(timerInterval);
-                timerInterval = null;
-                
-                // NEW: Play the chime sound
-                playChime();
-
-                // Vibrate the device if supported (for mobile feedback)
-                if (window.navigator && window.navigator.vibrate) {
-                    window.navigator.vibrate(1000); // Vibrate for 1 second
-                }
-
-                // Visual feedback: briefly flash the background green
-                appContainer.classList.remove('bg-yolk-cream');
-                appContainer.classList.add('bg-green-300');
-                setTimeout(() => {
-                    appContainer.classList.remove('bg-green-300');
-                    appContainer.classList.add('bg-yolk-cream');
-                }, 1000);
-
-                statusMessage.textContent = "Done! Your egg is ready!";
-                showModal("Time's up! Your egg is perfectly cooked!");
-
-            } else {
-                secondsRemaining--;
-                render();
-            }
-        }
-
-        /**
-         * Starts a new timer.
-         * @param {number} duration - The duration in seconds.
-         * @param {string} type - The type of boil (Soft, Medium, or Hard).
-         */
-        function startTimer(duration, type) {
-            if (timerInterval) {
-                // If a timer is already running, clear it first
-                clearInterval(timerInterval);
-            }
-            
-            secondsRemaining = duration;
-            statusMessage.textContent = `Timing for ${type} Boil...`;
-            render();
-
-            // Start the interval
-            timerInterval = setInterval(tick, 1000);
-        }
-
-        // --- Event Listeners ---
-
-        softBoilBtn.addEventListener('click', () => {
-            initAudio();
-            startTimer(SOFT_BOIL_DURATION, 'Soft');
-        });
-
-        mediumBoilBtn.addEventListener('click', () => {
-            initAudio();
-            startTimer(MEDIUM_BOIL_DURATION, 'Medium');
-        });
-
-        hardBoilBtn.addEventListener('click', () => {
-            initAudio();
-            startTimer(HARD_BOIL_DURATION, 'Hard');
-        });
-        
-        stopBtn.addEventListener('click', () => {
-            initAudio();
-            stopTimer();
-        });
-
-
-        // Initialize display
-        render();
-
-    </script>
+    // Accessibility: keyboard shortcuts 1/2/3 for presets
+    window.addEventListener('keydown', (e)=>{
+      if (e.key === '1') presets[0].click();
+      if (e.key === '2') presets[1].click();
+      if (e.key === '3') presets[2].click();
+      if (e.key === ' ') { e.preventDefault(); startPause.click(); }
+    });
+  </script>
 </body>
 </html>

@@ -1,200 +1,272 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Egg Timer — Tapfone</title>
+  <title>Egg Timer</title>
   <style>
-    /* Root layout: center a 9:16 app frame */
-    :root{--bg:#f3f3f5;--egg:#ffffff;--yolk:#ffd24d;--accent:#ffb84d;--glass: rgba(255,255,255,0.6)}
-    html,body{height:100%;margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,'Helvetica Neue',Arial}
-    body{display:flex;align-items:center;justify-content:center;background:#4da6ff;}
-
-    /* App frame with 9:16 aspect ratio */
-    .frame{
-      width:min(420px,46vh); /* responsive: scale with viewport height */
-      aspect-ratio:9/16; /* enforces 9:16 ratio */
-      display:flex;flex-direction:column;align-items:center;justify-content:space-between;
-      padding:18px;box-sizing:border-box;position:relative;
+    :root{
+      --egg-white: #FFFDF7; /* background */
+      --shell: #F2EDE6;    /* shell/containers */
+      --yolk: #F4C430;     /* yolk accent */
+      --text: #222;
+      --muted: #7a7a7a;
+      --glass: rgba(255,255,255,0.6);
     }
 
-    /* Egg background (oval) */
-    .egg{
-      width:100%;height:100%;background:var(--egg);border-radius:60% 60% 55% 55% / 68% 68% 32% 32%;
-      box-shadow: 0 18px 40px rgba(10,20,40,0.08), inset -6px -10px 20px rgba(0,0,0,0.03);
-      position:relative;display:flex;flex-direction:column;align-items:center;padding:20px;gap:8px;
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+      background: linear-gradient(180deg,var(--egg-white), #fff);
+      color:var(--text);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:24px;
     }
 
-    /* Title top center */
-    .title{font-weight:700;font-size:20px;letter-spacing:0.6px;text-align:center;margin-top:6px}
+    .app{
+      width:100%;
+      max-width:420px;
+      background:linear-gradient(180deg,var(--shell), #fff);
+      border-radius:20px;
+      box-shadow: 0 8px 30px rgba(34,34,34,0.12);
+      padding:22px;
+      display:flex;
+      flex-direction:column;
+      gap:18px;
+      min-height:520px;
+    }
 
-    /* Yolk area */
-    .yolk-wrap{flex:1;display:flex;align-items:center;justify-content:center;width:100%;}
+    header{ text-align:center }
+    h1{margin:6px 0 0 0; font-size:1.6rem; letter-spacing:0.3px}
+
+    /* egg stage area */
+    .egg-wrap{
+      background: radial-gradient(circle at 30% 20%, rgba(244,196,48,0.12), transparent 30%), #fff;
+      border-radius:16px;
+      padding:18px;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      gap:12px;
+      box-shadow: inset 0 -6px 18px rgba(0,0,0,0.03);
+    }
+
+    .egg-visual{
+      width:160px; height:160px; border-radius:50%;
+      background: white;
+      position:relative;
+      display:flex; align-items:center; justify-content:center;
+      box-shadow: 0 10px 24px rgba(0,0,0,0.06);
+    }
+
     .yolk{
-      width:64%;aspect-ratio:1/1;border-radius:50%;background:radial-gradient(circle at 30% 28%, #ffe27a 0%, var(--yolk) 45%, #ffb84d 100%);
-      display:flex;align-items:center;justify-content:center;position:relative;box-shadow: 0 10px 20px rgba(255,180,60,0.18), inset 0 -6px 10px rgba(255,255,255,0.25);
+      width:84px; height:84px; border-radius:50%; background:var(--yolk);
+      box-shadow: 0 6px 18px rgba(244,196,48,0.32);
     }
 
-    /* Circular progress SVG sits around the yolk */
-    .progress-svg{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:110%;height:110%;pointer-events:none}
+    .time-display{
+      font-size:2.2rem;
+      font-weight:600;
+      color:var(--text);
+      letter-spacing:0.6px;
+    }
 
-    .time-display{position:absolute;font-weight:700;font-size:28px;color:#222;text-shadow:0 1px 0 rgba(255,255,255,0.6)}
+    .controls{
+      display:flex; gap:10px; justify-content:center; flex-wrap:wrap;
+    }
 
-    /* Controls area */
-    .controls{width:100%;display:flex;flex-direction:column;gap:12px;padding:8px 6px 16px;box-sizing:border-box}
-    .preset-row{display:flex;gap:10px;justify-content:center}
-    button.preset{flex:1;padding:12px 8px;border-radius:12px;border:none;font-weight:700;cursor:pointer;box-shadow:0 6px 14px rgba(0,0,0,0.06)}
-    .soft{background:linear-gradient(180deg,#e6f6ff,#d9f0ff);color:#065a86}
-    .medium{background:linear-gradient(180deg,#fff6e6,#fff0d9);color:#7a4a00}
-    .hard{background:linear-gradient(180deg,#ffece6,#ffdcd0);color:#7a2b00}
+    /* button styles: soft / medium / hard (neumorphic-ish) */
+    .btn{
+      min-width:86px;
+      padding:12px 14px;
+      border-radius:12px;
+      border:0;
+      font-weight:600;
+      font-size:0.96rem;
+      cursor:pointer;
+      box-shadow: 6px 6px 16px rgba(0,0,0,0.06), -6px -6px 16px rgba(255,255,255,0.7);
+      transition:transform .12s ease, box-shadow .12s ease;
+      display:inline-flex; gap:8px; align-items:center; justify-content:center;
+    }
 
-    .utility-row{display:flex;gap:12px;justify-content:center}
-    button.ghost{background:transparent;border:2px solid rgba(0,0,0,0.06);padding:10px 14px;border-radius:10px;font-weight:700;cursor:pointer}
+    .btn:active{ transform:translateY(2px) }
 
-    /* Footer */
-    .footer{font-weight:600;font-size:13px;padding-bottom:6px;color:#667085;text-align:center}
+    .btn-soft{ background: linear-gradient(180deg,#fff,#f7f7f7); color:var(--text) }
+    .btn-medium{ background: linear-gradient(180deg,#fff8e6,#fff3da); color:var(--text) }
+    .btn-hard{ background: linear-gradient(180deg,#fff6e8,#fff0d9); color:var(--text) }
 
-    /* Responsive tweaks */
-    @media (max-width:420px){.frame{width:92vw}}
+    .btn--start{
+      background: linear-gradient(180deg,var(--yolk), #e6b21a);
+      color:#111; padding:12px 18px; border-radius:14px; font-weight:700;
+      box-shadow: 0 8px 24px rgba(244,196,48,0.28);
+    }
+
+    .small{ font-size:0.82rem; font-weight:600 }
+
+    .progress{
+      height:8px; width:100%; background:rgba(0,0,0,0.06); border-radius:8px; overflow:hidden;
+    }
+    .progress > i{ display:block; height:100%; width:0%; background:linear-gradient(90deg,var(--yolk), #f3b80f); transition:width 200ms linear }
+
+    footer{ text-align:center; margin-top:auto; color:#000; font-weight:600 }
+
+    /* Mobile adjustments */
+    @media (max-width:420px){
+      .egg-visual{ width:140px; height:140px }
+      .yolk{ width:72px; height:72px }
+      .app{ padding:16px; border-radius:18px }
+    }
+
   </style>
 </head>
 <body>
-  <div class="frame" role="application" aria-label="Egg timer">
-    <div class="egg">
-      <div class="title" id="appTitle">Egg Timer</div>
+  <div class="app" role="application" aria-label="Egg Timer App">
+    <header>
+      <h1>Egg Timer</h1>
+      <p class="small" style="color:var(--muted);margin-top:6px">Choose hardness — tap to start</p>
+    </header>
 
-      <div class="yolk-wrap">
-        <div class="yolk" aria-hidden="true">
-          <!-- progress ring (SVG) -->
-          <svg class="progress-svg" viewBox="0 0 120 120" preserveAspectRatio="xMidYMid meet">
-            <defs></defs>
-            <g transform="translate(60 60)">
-              <circle r="52" fill="transparent" stroke="rgba(0,0,0,0.04)" stroke-width="12"></circle>
-              <circle id="progress" r="52" fill="transparent" stroke="rgba(0,0,0,0.12)" stroke-width="12" stroke-linecap="round"
-                      stroke-dasharray="326.725" stroke-dashoffset="0" transform="rotate(-90)"></circle>
-            </g>
-          </svg>
-
-          <div class="time-display" id="timeDisplay">00:00</div>
-        </div>
+    <section class="egg-wrap" aria-hidden="false">
+      <div class="egg-visual" aria-hidden="true">
+        <div class="yolk" id="yolk"></div>
       </div>
 
-      <div class="controls">
-        <div class="preset-row">
-          <button class="preset soft" data-seconds="240">Soft<br><small>4:00</small></button>
-          <button class="preset medium" data-seconds="420">Medium<br><small>7:00</small></button>
-          <button class="preset hard" data-seconds="600">Hard<br><small>10:00</small></button>
-        </div>
+      <div class="time-display" id="time">00:00</div>
 
-        <div class="utility-row">
-          <button class="ghost" id="startPause">Start</button>
-          <button class="ghost" id="resetBtn">Reset</button>
-        </div>
+      <div class="progress" aria-hidden="true"><i id="bar"></i></div>
+
+      <div class="controls" role="group" aria-label="Timer presets">
+        <button class="btn btn-soft" data-mins="4" aria-pressed="false">Soft<br><span style="font-size:0.78rem;color:var(--muted)">4 min</span></button>
+        <button class="btn btn-medium" data-mins="7" aria-pressed="false">Medium<br><span style="font-size:0.78rem;color:var(--muted)">7 min</span></button>
+        <button class="btn btn-hard" data-mins="10" aria-pressed="false">Hard<br><span style="font-size:0.78rem;color:var(--muted)">10 min</span></button>
       </div>
 
-      <div class="footer">Tapfone</div>
-    </div>
+      <div style="display:flex; gap:10px; justify-content:center; margin-top:8px">
+        <button id="startPause" class="btn btn--start">Start</button>
+        <button id="reset" class="btn small" style="background:var(--glass);">Reset</button>
+      </div>
+
+    </section>
+
+    <footer>Tapfone</footer>
   </div>
 
   <script>
-    // Element refs
-    const presets = document.querySelectorAll('.preset');
-    const startPause = document.getElementById('startPause');
-    const resetBtn = document.getElementById('resetBtn');
-    const timeDisplay = document.getElementById('timeDisplay');
-    const progress = document.getElementById('progress');
+    // timer logic
+    const timeEl = document.getElementById('time');
+    const bar = document.getElementById('bar');
+    const startBtn = document.getElementById('startPause');
+    const resetBtn = document.getElementById('reset');
+    const presetBtns = document.querySelectorAll('[data-mins]');
 
-    // Timer state
     let totalSeconds = 0;
     let remaining = 0;
-    let timerId = null;
-    const circumference = 2 * Math.PI * 52; // matches r=52 used in SVG
-    progress.style.strokeDasharray = circumference.toFixed(3);
+    let interval = null;
+    let isRunning = false;
 
     function formatTime(s){
-      const mm = Math.floor(s/60).toString().padStart(2,'0');
-      const ss = Math.floor(s%60).toString().padStart(2,'0');
-      return `${mm}:${ss}`;
+      const m = Math.floor(s/60).toString().padStart(2,'0');
+      const sec = (s%60).toString().padStart(2,'0');
+      return `${m}:${sec}`;
     }
 
-    function updateDisplay(){
-      timeDisplay.textContent = formatTime(remaining);
-      // update progress offset
-      const pct = totalSeconds > 0 ? (remaining / totalSeconds) : 0;
-      const dash = (1 - pct) * circumference;
-      progress.style.strokeDashoffset = dash.toFixed(3);
+    function setTimerMinutes(mins){
+      totalSeconds = mins*60;
+      remaining = totalSeconds;
+      updateUI();
+      start();
     }
 
-    function startTimer(){
-      if (remaining <= 0) return;
-      if (timerId) return; // already running
-      startPause.textContent = 'Pause';
-      timerId = setInterval(()=>{
-        remaining--;
-        if (remaining <= 0){
-          remaining = 0;updateDisplay();stopTimer(true);return;
-        }
-        updateDisplay();
-      },1000);
-    }
-
-    function stopTimer(finished=false){
-      if (timerId){clearInterval(timerId);timerId = null}
-      startPause.textContent = finished? 'Done' : 'Start';
-      if (finished){
-        // small visual flash on completion
-        const yolk = document.querySelector('.yolk');
-        yolk.animate([{transform:'scale(1)'},{transform:'scale(1.06)'},{transform:'scale(1)'}],{duration:700});
-        // play a beep using WebAudio
-        try{
-          const ctx = new (window.AudioContext||window.webkitAudioContext)();
-          const o = ctx.createOscillator(); const g = ctx.createGain();
-          o.type='sine'; o.frequency.value=880; g.gain.value=0.0001;
-          o.connect(g); g.connect(ctx.destination);
-          o.start(); g.gain.exponentialRampToValueAtTime(0.04, ctx.currentTime+0.02);
-          g.gain.exponentialRampToValueAtTime(0.00001, ctx.currentTime+0.6);
-          o.stop(ctx.currentTime+0.62);
-        }catch(e){/* ignore if audio blocked */}
-      }
-    }
-
-    // Preset buttons
-    presets.forEach(btn=>{
-      btn.addEventListener('click',()=>{
-        totalSeconds = Number(btn.dataset.seconds);
-        remaining = totalSeconds;
-        updateDisplay();
-        stopTimer();
-        // auto-start
-        startTimer();
+    presetBtns.forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        const mins = Number(btn.dataset.mins);
+        setTimerMinutes(mins);
       });
     });
 
-    // Start/Pause handler
-    startPause.addEventListener('click',()=>{
-      if (!timerId){
-        startTimer();
-      } else {
-        // pause
-        clearInterval(timerId); timerId = null; startPause.textContent='Start';
+    function updateUI(){
+      timeEl.textContent = formatTime(remaining);
+      const pct = totalSeconds ? Math.round(((totalSeconds-remaining)/totalSeconds)*100) : 0;
+      bar.style.width = pct + '%';
+
+      // yolk bounce subtle based on remaining
+      const yolk = document.getElementById('yolk');
+      const scale = 1 + ( (totalSeconds ? (1 - remaining/totalSeconds) : 0) * 0.06 );
+      yolk.style.transform = `scale(${scale})`;
+    }
+
+    function tick(){
+      if(remaining <= 0){
+        finish();
+        return;
       }
+      remaining -= 1;
+      updateUI();
+    }
+
+    function start(){
+      if(isRunning) return;
+      if(remaining <= 0) return;
+      interval = setInterval(tick, 1000);
+      isRunning = true;
+      startBtn.textContent = 'Pause';
+    }
+
+    function pause(){
+      clearInterval(interval);
+      interval = null;
+      isRunning = false;
+      startBtn.textContent = 'Start';
+    }
+
+    startBtn.addEventListener('click', ()=>{
+      if(isRunning) pause(); else start();
     });
 
-    // Reset
-    resetBtn.addEventListener('click',()=>{
-      clearInterval(timerId); timerId = null; totalSeconds = 0; remaining = 0; updateDisplay(); startPause.textContent='Start';
+    resetBtn.addEventListener('click', ()=>{
+      pause();
+      remaining = totalSeconds;
+      if(!totalSeconds) remaining = 0;
+      bar.style.width = '0%';
+      updateUI();
     });
 
-    // init display
-    totalSeconds = 0; remaining = 0; updateDisplay();
+    function finish(){
+      pause();
+      remaining = 0;
+      updateUI();
+      bar.style.width = '100%';
+      // chime using WebAudio
+      try{
+        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+        const o = ctx.createOscillator();
+        const g = ctx.createGain();
+        o.type = 'sine'; o.frequency.value = 880;
+        g.gain.value = 0.0001;
+        o.connect(g); g.connect(ctx.destination);
+        o.start();
+        // ramp up then down
+        g.gain.exponentialRampToValueAtTime(0.1, ctx.currentTime + 0.07);
+        g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 1.6);
+        o.stop(ctx.currentTime + 1.7);
+      }catch(e){
+        // fallback: beep using alert (only if audio not available)
+        // alert('Enjoy Your Egg!');
+      }
 
-    // Accessibility: keyboard shortcuts 1/2/3 for presets
-    window.addEventListener('keydown', (e)=>{
-      if (e.key === '1') presets[0].click();
-      if (e.key === '2') presets[1].click();
-      if (e.key === '3') presets[2].click();
-      if (e.key === ' ') { e.preventDefault(); startPause.click(); }
-    });
+      // small screen note
+      timeEl.textContent = 'Enjoy Your Egg!';
+      setTimeout(()=>{
+        updateUI();
+      }, 2500);
+    }
+
+    // initialize display
+    timeEl.textContent = '00:00';
   </script>
 </body>
 </html>

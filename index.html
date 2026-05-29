@@ -1,272 +1,129 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Egg Timer</title>
-  <style>
-    :root{
-      --egg-white: #FFFDF7; /* background */
-      --shell: #F2EDE6;    /* shell/containers */
-      --yolk: #F4C430;     /* yolk accent */
-      --text: #222;
-      --muted: #7a7a7a;
-      --glass: rgba(255,255,255,0.6);
-    }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Egg Timer</title>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f4f7f6;
+            font-family: sans-serif;
+            padding: 20px 0;
+            box-sizing: border-box;
+        }
 
-    *{box-sizing:border-box}
-    html,body{height:100%}
-    body{
-      margin:0;
-      font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
-      background: linear-gradient(180deg,var(--egg-white), #fff);
-      color:var(--text);
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      padding:24px;
-    }
+        h1 { color: #000; margin: 0; }
+        footer { color: #000; font-size: 0.9rem; }
 
-    .app{
-      width:100%;
-      max-width:420px;
-      background:linear-gradient(180deg,var(--shell), #fff);
-      border-radius:20px;
-      box-shadow: 0 8px 30px rgba(34,34,34,0.12);
-      padding:22px;
-      display:flex;
-      flex-direction:column;
-      gap:18px;
-      min-height:520px;
-    }
+        #egg {
+            width: 220px;
+            height: 300px;
+            background: radial-gradient(circle at 30% 30%, #ffffff, #e0d8c3);
+            border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+            box-shadow: inset -10px -10px 20px rgba(0,0,0,0.1), 10px 10px 30px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 15px;
+            transition: background 0.5s;
+        }
 
-    header{ text-align:center }
-    h1{margin:6px 0 0 0; font-size:1.6rem; letter-spacing:0.3px}
+        #timer { font-size: 2.5rem; font-weight: bold; color: #555; }
 
-    /* egg stage area */
-    .egg-wrap{
-      background: radial-gradient(circle at 30% 20%, rgba(244,196,48,0.12), transparent 30%), #fff;
-      border-radius:16px;
-      padding:18px;
-      display:flex;
-      flex-direction:column;
-      align-items:center;
-      gap:12px;
-      box-shadow: inset 0 -6px 18px rgba(0,0,0,0.03);
-    }
+        select {
+            padding: 5px;
+            border-radius: 10px;
+            border: 1px solid #ccc;
+            cursor: pointer;
+        }
 
-    .egg-visual{
-      width:160px; height:160px; border-radius:50%;
-      background: white;
-      position:relative;
-      display:flex; align-items:center; justify-content:center;
-      box-shadow: 0 10px 24px rgba(0,0,0,0.06);
-    }
-
-    .yolk{
-      width:84px; height:84px; border-radius:50%; background:var(--yolk);
-      box-shadow: 0 6px 18px rgba(244,196,48,0.32);
-    }
-
-    .time-display{
-      font-size:2.2rem;
-      font-weight:600;
-      color:var(--text);
-      letter-spacing:0.6px;
-    }
-
-    .controls{
-      display:flex; gap:10px; justify-content:center; flex-wrap:wrap;
-    }
-
-    /* button styles: soft / medium / hard (neumorphic-ish) */
-    .btn{
-      min-width:86px;
-      padding:12px 14px;
-      border-radius:12px;
-      border:0;
-      font-weight:600;
-      font-size:0.96rem;
-      cursor:pointer;
-      box-shadow: 6px 6px 16px rgba(0,0,0,0.06), -6px -6px 16px rgba(255,255,255,0.7);
-      transition:transform .12s ease, box-shadow .12s ease;
-      display:inline-flex; gap:8px; align-items:center; justify-content:center;
-    }
-
-    .btn:active{ transform:translateY(2px) }
-
-    .btn-soft{ background: linear-gradient(180deg,#fff,#f7f7f7); color:var(--text) }
-    .btn-medium{ background: linear-gradient(180deg,#fff8e6,#fff3da); color:var(--text) }
-    .btn-hard{ background: linear-gradient(180deg,#fff6e8,#fff0d9); color:var(--text) }
-
-    .btn--start{
-      background: linear-gradient(180deg,var(--yolk), #e6b21a);
-      color:#111; padding:12px 18px; border-radius:14px; font-weight:700;
-      box-shadow: 0 8px 24px rgba(244,196,48,0.28);
-    }
-
-    .small{ font-size:0.82rem; font-weight:600 }
-
-    .progress{
-      height:8px; width:100%; background:rgba(0,0,0,0.06); border-radius:8px; overflow:hidden;
-    }
-    .progress > i{ display:block; height:100%; width:0%; background:linear-gradient(90deg,var(--yolk), #f3b80f); transition:width 200ms linear }
-
-    footer{ text-align:center; margin-top:auto; color:#000; font-weight:600 }
-
-    /* Mobile adjustments */
-    @media (max-width:420px){
-      .egg-visual{ width:140px; height:140px }
-      .yolk{ width:72px; height:72px }
-      .app{ padding:16px; border-radius:18px }
-    }
-
-  </style>
+        .controls { display: flex; gap: 10px; }
+        button { padding: 10px 15px; cursor: pointer; border: none; border-radius: 20px; background: #f6cd0b; color: white; }
+        .finished { background: #f1c40f !important; }
+    </style>
 </head>
 <body>
-  <div class="app" role="application" aria-label="Egg Timer App">
-    <header>
-      <h1>Egg Timer</h1>
-      <p class="small" style="color:var(--muted);margin-top:6px">Choose hardness — tap to start</p>
-    </header>
 
-    <section class="egg-wrap" aria-hidden="false">
-      <div class="egg-visual" aria-hidden="true">
-        <div class="yolk" id="yolk"></div>
-      </div>
+    <h1>Egg Timer</h1>
 
-      <div class="time-display" id="time">00:00</div>
+    <div id="egg">
+        <select id="eggType" onchange="setEggTime()">
+            <option value="360">Soft-boiled (6m)</option>
+            <option value="480">Medium-boiled (8m)</option>
+            <option value="600">Hard-boiled (10m)</option>
+        </select>
+        <div id="timer">06:00</div>
+        <div class="controls">
+            <button onclick="startTimer()">Start</button>
+            <button onclick="resetTimer()">Reset</button>
+        </div>
+    </div>
 
-      <div class="progress" aria-hidden="true"><i id="bar"></i></div>
+    <footer>Tapfone © 2026</footer>
 
-      <div class="controls" role="group" aria-label="Timer presets">
-        <button class="btn btn-soft" data-mins="4" aria-pressed="false">Soft<br><span style="font-size:0.78rem;color:var(--muted)">4 min</span></button>
-        <button class="btn btn-medium" data-mins="7" aria-pressed="false">Medium<br><span style="font-size:0.78rem;color:var(--muted)">7 min</span></button>
-        <button class="btn btn-hard" data-mins="10" aria-pressed="false">Hard<br><span style="font-size:0.78rem;color:var(--muted)">10 min</span></button>
-      </div>
+    <script>
+        let timeLeft = 360; 
+        let timerId = null;
+        const timerDisplay = document.getElementById('timer');
+        const eggTypeSelect = document.getElementById('eggType');
+        const egg = document.getElementById('egg');
 
-      <div style="display:flex; gap:10px; justify-content:center; margin-top:8px">
-        <button id="startPause" class="btn btn--start">Start</button>
-        <button id="reset" class="btn small" style="background:var(--glass);">Reset</button>
-      </div>
+        function playAlert() {
+            const ctx = new (window.AudioContext || window.webkitAudioContext)();
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(880, ctx.currentTime); // High pitch A5
+            gain.gain.setValueAtTime(0.1, ctx.currentTime);
+            
+            osc.start();
+            osc.stop(ctx.currentTime + 0.5); // Plays for 0.5 seconds
+        }
 
-    </section>
+        function setEggTime() {
+            timeLeft = parseInt(eggTypeSelect.value);
+            updateDisplay();
+        }
 
-    <footer>Tapfone</footer>
-  </div>
+        function updateDisplay() {
+            const mins = Math.floor(timeLeft / 60);
+            const secs = timeLeft % 60;
+            timerDisplay.textContent = `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+        }
 
-  <script>
-    // timer logic
-    const timeEl = document.getElementById('time');
-    const bar = document.getElementById('bar');
-    const startBtn = document.getElementById('startPause');
-    const resetBtn = document.getElementById('reset');
-    const presetBtns = document.querySelectorAll('[data-mins]');
+        function startTimer() {
+            if (timerId) return;
+            egg.classList.remove('finished');
+            timerId = setInterval(() => {
+                timeLeft--;
+                updateDisplay();
+                if (timeLeft <= 0) {
+                    clearInterval(timerId);
+                    timerId = null;
+                    egg.classList.add('finished');
+                    playAlert();
+                    alert("Your egg is ready!");
+                }
+            }, 1000);
+        }
 
-    let totalSeconds = 0;
-    let remaining = 0;
-    let interval = null;
-    let isRunning = false;
-
-    function formatTime(s){
-      const m = Math.floor(s/60).toString().padStart(2,'0');
-      const sec = (s%60).toString().padStart(2,'0');
-      return `${m}:${sec}`;
-    }
-
-    function setTimerMinutes(mins){
-      totalSeconds = mins*60;
-      remaining = totalSeconds;
-      updateUI();
-      start();
-    }
-
-    presetBtns.forEach(btn=>{
-      btn.addEventListener('click', ()=>{
-        const mins = Number(btn.dataset.mins);
-        setTimerMinutes(mins);
-      });
-    });
-
-    function updateUI(){
-      timeEl.textContent = formatTime(remaining);
-      const pct = totalSeconds ? Math.round(((totalSeconds-remaining)/totalSeconds)*100) : 0;
-      bar.style.width = pct + '%';
-
-      // yolk bounce subtle based on remaining
-      const yolk = document.getElementById('yolk');
-      const scale = 1 + ( (totalSeconds ? (1 - remaining/totalSeconds) : 0) * 0.06 );
-      yolk.style.transform = `scale(${scale})`;
-    }
-
-    function tick(){
-      if(remaining <= 0){
-        finish();
-        return;
-      }
-      remaining -= 1;
-      updateUI();
-    }
-
-    function start(){
-      if(isRunning) return;
-      if(remaining <= 0) return;
-      interval = setInterval(tick, 1000);
-      isRunning = true;
-      startBtn.textContent = 'Pause';
-    }
-
-    function pause(){
-      clearInterval(interval);
-      interval = null;
-      isRunning = false;
-      startBtn.textContent = 'Start';
-    }
-
-    startBtn.addEventListener('click', ()=>{
-      if(isRunning) pause(); else start();
-    });
-
-    resetBtn.addEventListener('click', ()=>{
-      pause();
-      remaining = totalSeconds;
-      if(!totalSeconds) remaining = 0;
-      bar.style.width = '0%';
-      updateUI();
-    });
-
-    function finish(){
-      pause();
-      remaining = 0;
-      updateUI();
-      bar.style.width = '100%';
-      // chime using WebAudio
-      try{
-        const ctx = new (window.AudioContext || window.webkitAudioContext)();
-        const o = ctx.createOscillator();
-        const g = ctx.createGain();
-        o.type = 'sine'; o.frequency.value = 880;
-        g.gain.value = 0.0001;
-        o.connect(g); g.connect(ctx.destination);
-        o.start();
-        // ramp up then down
-        g.gain.exponentialRampToValueAtTime(0.1, ctx.currentTime + 0.07);
-        g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 1.6);
-        o.stop(ctx.currentTime + 1.7);
-      }catch(e){
-        // fallback: beep using alert (only if audio not available)
-        // alert('Enjoy Your Egg!');
-      }
-
-      // small screen note
-      timeEl.textContent = 'Enjoy Your Egg!';
-      setTimeout(()=>{
-        updateUI();
-      }, 2500);
-    }
-
-    // initialize display
-    timeEl.textContent = '00:00';
-  </script>
+        function resetTimer() {
+            clearInterval(timerId);
+            timerId = null;
+            setEggTime();
+            egg.classList.remove('finished');
+        }
+    </script>
 </body>
 </html>
